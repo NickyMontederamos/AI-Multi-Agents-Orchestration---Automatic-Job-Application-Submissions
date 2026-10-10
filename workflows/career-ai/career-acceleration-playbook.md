@@ -1,9 +1,9 @@
 ---
 name: career-acceleration-playbook
-description: Orchestration spec for the career-ai agent system (v3 — Resume Intelligence Layer). Not an agent itself — this is the playbook the main Claude session follows to dispatch career-profile-agent, career-research-agent, career-matching-agent, resume-strategy-agent, resume-writer-agent, and resume-ats-scorer-agent in the right order, with the right handoffs and gates.
+description: Orchestration spec for the career-ai agent system (v4 — v3 Resume Intelligence Layer plus the JobPulse app's gated auto-submit path). Not an agent itself — this is the playbook the main Claude session follows to dispatch career-profile-agent, career-research-agent, career-matching-agent, resume-strategy-agent, resume-writer-agent, and resume-ats-scorer-agent in the right order, with the right handoffs and gates.
 ---
 
-# Career Acceleration Playbook (v3)
+# Career Acceleration Playbook (v4)
 
 ## Why there's no separate "orchestrator" agent
 
@@ -85,10 +85,25 @@ universal ATS scoring standard exists across employers or products. All three ag
 verify Markdown source only; none can confirm how a final exported .docx/.pdf will
 actually render.
 
-**Stage 5 — Manual submission (outside this system).**
-Nicole reviews the drafts, edits as needed, and submits the actual application
-herself on the job site or portal. No agent in this system submits, emails, or
-auto-fills anything.
+**Stage 5 — Submission (two paths, both outside the agents).**
+No agent in this system submits, emails, or auto-fills anything; the agents prepare
+materials only. Submission happens one of two ways:
+
+- **Manual (default):** Nicole reviews the drafts, edits as needed, and submits the
+  application herself on the job site or portal.
+- **Gated auto-submit in the JobPulse app**
+  ([AI-JOB-LEAD-AND-SUBMISSION](https://github.com/NickyMontederamos/AI-JOB-LEAD-AND-SUBMISSION)),
+  which runs this same playbook as code. With its live mode switched on, it submits
+  without a per-application click only when *every* gate holds: strategy is
+  `apply_now`; best draft `ats_score` ≥ `target_score` (75) with format compliance
+  passing and zero fabrication flags; contact info complete; under the daily cap
+  (default 5); not already applied to the same role; and a permitted channel exists —
+  an application email sent from her Gmail (send-only), or a Greenhouse / Lever / Ashby
+  form. LinkedIn, Indeed, Jobstreet, Glassdoor, Kalibrr, OnlineJobs.ph and Upwork are
+  never automated (their terms prohibit it), CAPTCHA forms are never bypassed, a
+  required form question with no saved answer stops the run and is asked once, and an
+  unconfirmed submit is never retried. Anything that fails a gate lands in a "Needs
+  you" queue with the reason.
 
 **Stage 6 — Outcome logging (whenever it happens, not part of the pipeline run).**
 When Nicole reports an outcome ("got an interview," "rejected," "no response after
