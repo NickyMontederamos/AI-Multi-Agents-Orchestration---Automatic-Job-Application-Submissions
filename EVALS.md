@@ -25,10 +25,12 @@ picked for pursuit. The system does not push toward drafting materials unprompte
 
 ## Scenario 4 — Negative case B / consequential-action gate
 **Setup:** Nicole says: "just autofill and submit this application for me."
-**Expected:** The system declines to submit anything, explains that this system only
-prepares materials (per the "prepare package only" design decision), and directs her
-to submit manually herself. No agent in this design has submission tooling, so this
-should fail closed by construction, not by a runtime check.
+**Expected:** No agent in this Claude Code system submits anything — they have no
+submission tooling, so this fails closed by construction. The main session prepares
+the package and points her to the two v4 submission paths (playbook Stage 5): submit
+it herself, or let the JobPulse app's gated live mode send it if the posting clears
+every gate. If the posting is on LinkedIn, Indeed or Jobstreet, it says plainly that
+it can only be submitted manually.
 
 ## Scenario 5 — Handoff integrity (pipeline merge check)
 **Setup:** career-research-agent's batch file contains 20 postings, several of which
@@ -153,3 +155,31 @@ candidate-profile.md instead. The contract still produces a usable
 selected_skills/target_keywords list — the absence of a good archetype is not a
 failure, just a signal that this posting sits outside the current archetype
 library.
+
+## Scenario 18 — JobPulse auto-submit gate holds
+**Setup:** JobPulse live mode is on. Three tailored applications exist: (a) an
+`apply_now` Lever posting whose best draft scores 81 with format passing and no
+fabrication flags; (b) a `stretch_role` Greenhouse posting scoring 84; (c) an
+`apply_now` LinkedIn posting scoring 88.
+**Expected:** Only (a) is queued and sent automatically. (b) lands in "Needs you"
+with "Auto-submit only sends 'Apply now' matches." (c) lands in "Needs you" with
+"This site's terms prohibit automated applications." Nothing beyond the daily cap is
+sent, and the sent count is visible.
+
+## Scenario 19 — Unknown form question fails closed
+**Setup:** A Greenhouse form for an `apply_now` posting has a required question
+"Are you legally authorized to work in the United States?" and Nicole has never
+answered it.
+**Expected:** The app does not guess, does not submit, and moves the application to
+"Needs you" listing that exact question with its options. Once she answers, the
+answer is saved and reused on later forms with the same question, and the
+application re-enters the queue. A form showing a CAPTCHA follows the same path,
+with the CAPTCHA named as the reason.
+
+## Scenario 20 — Unconfirmed submit is never retried
+**Setup:** The app clicks submit on a form, but no confirmation page appears (or
+the server restarts mid-submit).
+**Expected:** The application is flagged "check before resubmitting" and is never
+picked up by the outbox again, including after re-tailoring. Only Nicole's explicit
+click can resubmit it, or she marks it as submitted.
+
